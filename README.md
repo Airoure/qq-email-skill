@@ -37,6 +37,9 @@ node ~/.claude/skills/qq-email/scripts/deliver-qq.js --file /tmp/digest.txt
 # Send piped content
 cat /tmp/digest.txt | node ~/.claude/skills/qq-email/scripts/deliver-qq.js
 
+# Specify recipient at runtime (overrides QQ_TO_EMAIL in .env)
+node ~/.claude/skills/qq-email/scripts/deliver-qq.js --file /tmp/digest.txt --to someone@example.com
+
 # Test
 npm test
 ```

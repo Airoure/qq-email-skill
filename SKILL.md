@@ -61,6 +61,7 @@ node /path/to/scripts/deliver-qq.js --message "Digest content here"
 |------|-------------|
 | `--file <path>` | Read email body from file |
 | `--message <text>` | Use argument as email body |
+| `--to <email>` | Override recipient email at runtime (falls back to `QQ_TO_EMAIL` env var) |
 | (stdin) | Read email body from standard input |
 
 ## Output

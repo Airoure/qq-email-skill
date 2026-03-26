@@ -6,14 +6,14 @@
 // Sends email via QQ邮箱 SMTP (SSL, port 465).
 //
 // Usage:
-//   node deliver-qq.js --file /path/to/digest.txt
-//   node deliver-qq.js --message "text"
-//   echo "text" | node deliver-qq.js
+//   node deliver-qq.js --file /path/to/digest.txt [--to recipient@example.com]
+//   node deliver-qq.js --message "text" [--to recipient@example.com]
+//   echo "text" | node deliver-qq.js [--to recipient@example.com]
 //
 // Required env vars in ~/.follow-builders/.env:
 //   QQ_SMTP_USER=your-qq-email@qq.com
 //   QQ_SMTP_PASS=authorization-code
-//   QQ_TO_EMAIL=recipient@example.com
+//   QQ_TO_EMAIL=recipient@example.com   (default, can override with --to)
 // ============================================================================
 
 import { readFile } from 'fs/promises';
@@ -67,6 +67,15 @@ async function getDigestText() {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
+function getToEmail() {
+  const args = process.argv.slice(2);
+  const toIdx = args.indexOf('--to');
+  if (toIdx !== -1 && args[toIdx + 1]) {
+    return args[toIdx + 1];
+  }
+  return null; // fall back to env var
+}
+
 // -- QQ SMTP Delivery --------------------------------------------------------
 
 async function sendQQEmail(text, smtpUser, smtpPass, toEmail) {
@@ -108,14 +117,15 @@ async function main() {
 
   const smtpUser = process.env.QQ_SMTP_USER;
   const smtpPass = process.env.QQ_SMTP_PASS;
-  const toEmail = process.env.QQ_TO_EMAIL;
+  const toEmail = getToEmail() || process.env.QQ_TO_EMAIL;
 
   if (!smtpUser || !smtpPass || !toEmail) {
     throw new Error(
       'Missing QQ SMTP config. Set in ~/.follow-builders/.env:\n' +
       '  QQ_SMTP_USER=your-qq-email@qq.com\n' +
       '  QQ_SMTP_PASS=authorization-code\n' +
-      '  QQ_TO_EMAIL=recipient@example.com'
+      '  QQ_TO_EMAIL=recipient@example.com\n' +
+      'Or pass --to recipient@example.com at runtime.'
     );
   }
 
