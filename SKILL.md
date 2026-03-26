@@ -1,6 +1,6 @@
 ---
 name: qq-email
-description: Send emails via QQ邮箱 SMTP (SSL). Use when the user wants to send email through QQ's SMTP server, or when a delivery skill for QQ邮箱 is needed.
+description: Send emails via QQ邮箱 SMTP (SSL, port 465). Use when the user wants to send email through QQ's SMTP server, or when a delivery skill for QQ邮箱 is needed.
 ---
 
 # QQ Email SMTP Skill
@@ -34,6 +34,8 @@ Create `~/.follow-builders/.env` with:
 QQ_SMTP_USER=你的QQ邮箱@qq.com
 QQ_SMTP_PASS=授权码
 QQ_TO_EMAIL=收件人邮箱
+QQ_FROM_NAME=显示名称        # 可选，发件人显示名
+QQ_SUBJECT_PREFIX=主题前缀  # 可选，会自动附加日期
 ```
 
 Or run the setup conversation to configure interactively.
@@ -42,7 +44,7 @@ Or run the setup conversation to configure interactively.
 
 ### Send a file as email body:
 ```bash
-node /path/to/scripts/deliver-qq.js --file /tmp/digest.txt
+node /path/to/scripts/deliver-qq.js --file /tmp/body.txt
 ```
 
 ### Send piped input:
@@ -61,8 +63,19 @@ node /path/to/scripts/deliver-qq.js --message "Digest content here"
 |------|-------------|
 | `--file <path>` | Read email body from file |
 | `--message <text>` | Use argument as email body |
-| `--to <email>` | Override recipient email at runtime (falls back to `QQ_TO_EMAIL` env var) |
+| `--to <email>` | Override recipient email at runtime |
+| `--subject <text>` | Set email subject (overrides QQ_SUBJECT_PREFIX + date) |
 | (stdin) | Read email body from standard input |
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `QQ_SMTP_USER` | Yes | Your QQ email address |
+| `QQ_SMTP_PASS` | Yes | SMTP authorization code (not login password) |
+| `QQ_TO_EMAIL` | Yes | Default recipient email |
+| `QQ_FROM_NAME` | No | Sender display name (defaults to QQ email) |
+| `QQ_SUBJECT_PREFIX` | No | Subject prefix (appends date suffix) |
 
 ## Output
 
@@ -78,7 +91,7 @@ On failure:
 
 ## Dependencies
 
-Requires `nodemailer`. Install with:
+Requires `nodemailer` and `dotenv`. Install with:
 ```bash
 cd /path/to/scripts && npm install
 ```

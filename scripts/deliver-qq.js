@@ -6,14 +6,16 @@
 // Sends email via QQ邮箱 SMTP (SSL, port 465).
 //
 // Usage:
-//   node deliver-qq.js --file /path/to/digest.txt [--to recipient@example.com]
-//   node deliver-qq.js --message "text" [--to recipient@example.com]
-//   echo "text" | node deliver-qq.js [--to recipient@example.com]
+//   node deliver-qq.js --file /path/body.txt [--to email] [--subject "title"]
+//   node deliver-qq.js --message "body text" [--to email] [--subject "title"]
+//   echo "body text" | node deliver-qq.js [--to email] [--subject "title"]
 //
 // Required env vars in ~/.follow-builders/.env:
 //   QQ_SMTP_USER=your-qq-email@qq.com
 //   QQ_SMTP_PASS=authorization-code
 //   QQ_TO_EMAIL=recipient@example.com   (default, can override with --to)
+//   QQ_FROM_NAME=Display Name          (optional, shown as sender name)
+//   QQ_SUBJECT_PREFIX=Subject Prefix   (optional, auto-adds date suffix)
 // ============================================================================
 
 import { readFile } from 'fs/promises';
@@ -48,18 +50,27 @@ async function getDigestText() {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
+function getArg(args, flag) {
+  const idx = args.indexOf(flag);
+  if (idx !== -1 && args[idx + 1]) return args[idx + 1];
+  return null;
+}
+
 function getToEmail() {
-  const args = process.argv.slice(2);
-  const toIdx = args.indexOf('--to');
-  if (toIdx !== -1 && args[toIdx + 1]) {
-    return args[toIdx + 1];
-  }
-  return null; // fall back to env var
+  return getArg(process.argv.slice(2), '--to');
+}
+
+function getSubject() {
+  const subject = getArg(process.argv.slice(2), '--subject');
+  if (subject) return subject;
+  const prefix = process.env.QQ_SUBJECT_PREFIX || 'QQ Email';
+  const date = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+  return `${prefix} — ${date}`;
 }
 
 // -- QQ SMTP Delivery --------------------------------------------------------
 
-async function sendQQEmail(text, smtpUser, smtpPass, toEmail) {
+async function sendQQEmail(text, smtpUser, smtpPass, toEmail, subject, fromName) {
   const transporter = nodemailer.createTransport({
     host: 'smtp.qq.com',
     port: 465,
@@ -70,16 +81,10 @@ async function sendQQEmail(text, smtpUser, smtpPass, toEmail) {
     }
   });
 
-  const date = new Date().toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
   await transporter.sendMail({
-    from: `"AI Builders Digest" <${smtpUser}>`,
+    from: `"${fromName}" <${smtpUser}>`,
     to: toEmail,
-    subject: `AI Builders Digest — ${date}`,
+    subject,
     text
   });
 }
@@ -99,6 +104,8 @@ async function main() {
   const smtpUser = process.env.QQ_SMTP_USER;
   const smtpPass = process.env.QQ_SMTP_PASS;
   const toEmail = getToEmail() || process.env.QQ_TO_EMAIL;
+  const subject = getSubject();
+  const fromName = process.env.QQ_FROM_NAME || smtpUser;
 
   if (!smtpUser || !smtpPass || !toEmail) {
     throw new Error(
@@ -110,7 +117,7 @@ async function main() {
     );
   }
 
-  await sendQQEmail(digestText, smtpUser, smtpPass, toEmail);
+  await sendQQEmail(digestText, smtpUser, smtpPass, toEmail, subject, fromName);
   console.log(JSON.stringify({
     status: 'ok',
     method: 'qq-smtp',

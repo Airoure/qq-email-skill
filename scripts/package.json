@@ -5,7 +5,7 @@
   "type": "module",
   "main": "deliver-qq.js",
   "scripts": {
-    "test": "node deliver-qq.js --message 'Test email from QQ Email Skill'"
+    "test": "node deliver-qq.js --message 'Test email from QQ Email Skill' --subject 'QQ Email Skill Test'"
   },
   "dependencies": {
     "dotenv": "^17.3.1",
