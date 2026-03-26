@@ -20,30 +20,11 @@ import { readFile } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 import nodemailer from 'nodemailer';
+import { config as loadEnv } from 'dotenv';
 
 // -- Constants ---------------------------------------------------------------
 
 const ENV_PATH = join(homedir(), '.follow-builders', '.env');
-
-// -- Load .env manually (no dotenv dependency required) --------------------
-
-function loadEnv() {
-  try {
-    const { existsSync } = require('fs');
-    if (!existsSync(ENV_PATH)) return;
-    const { readFileSync } = require('fs');
-    const content = readFileSync(ENV_PATH, 'utf-8');
-    for (const line of content.split('\n')) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const eqIdx = trimmed.indexOf('=');
-      if (eqIdx === -1) continue;
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim();
-      if (!process.env[key]) process.env[key] = val;
-    }
-  } catch {}
-}
 
 // -- Read input --------------------------------------------------------------
 
@@ -106,7 +87,7 @@ async function sendQQEmail(text, smtpUser, smtpPass, toEmail) {
 // -- Main --------------------------------------------------------------------
 
 async function main() {
-  loadEnv();
+  loadEnv({ path: ENV_PATH });
 
   const digestText = await getDigestText();
 
