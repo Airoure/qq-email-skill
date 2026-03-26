@@ -1,0 +1,13 @@
+{
+  "name": "qq-email-skill",
+  "version": "1.0.0",
+  "description": "Send emails via QQ邮箱 SMTP for Claude Code skills",
+  "type": "module",
+  "main": "deliver-qq.js",
+  "scripts": {
+    "test": "node deliver-qq.js --message 'Test email from QQ Email Skill'"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.0"
+  }
+}
